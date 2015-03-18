@@ -9,30 +9,30 @@ var ip = require("ip");
 var net = require("net");
 
 var HOST = ip.address();
-var PORT = 6969;
+var PORT = 8888;
 
 // Create a server instance, and chain the listen function to it
 net.createServer(function(sock) {
     
-    // We have a connection - a socket object is assigned to the connection automatically
-    console.log('CONNECTED: ' + sock.remoteAddress +':'+ sock.remotePort);
-
+	// We have a connection - a socket object is assigned to the connection automatically
+	console.log('LASER TAG CLIENT CONNECTED: ' + sock.remoteAddress +':'+ sock.remotePort);
+	
+	//Send stuff to the client
 	sock.write("HEY THERE");
     
-    // Add a 'data' event handler to this instance of socket
-    sock.on('data', function(data) {
-        
-        console.log('DATA ' + sock.remoteAddress + ': ' + data);
-        // Write the data back to the socket, the client will receive it as data from the server
-        sock.write('You said "' + data + '"');
-        
-    });
+	// Add a 'data' event handler to this instance of socket
+	sock.on('data', function(data) {
+        	//Print what was sent by the client
+		console.log('DATA ' + sock.remoteAddress + ': ' + data);
+        });
     
-    // Add a 'close' event handler to this instance of socket
-    sock.on('close', function(data) {
-        console.log('CLOSED: ' + sock.remoteAddress +' '+ sock.remotePort);
-    });
+	// Add a 'close' event handler to this instance of socket
+	sock.on('close', function(data) {
+		//Display a message on close
+		console.log('LASER TAG CLIENT CLOSED: ' + sock.remoteAddress +' '+ sock.remotePort);
+	});
     
 }).listen(PORT, HOST);
 
-console.log('Server listening on ' + HOST +':'+ PORT);
+//Tell everyone where I'm running
+console.log('Laser Tag server listening on ' + HOST +':'+ PORT);
