@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/BoringCode/LaserTagServer/issues"
   },
-  "homepage": "https://github.com/BoringCode/LaserTagServer"
+  "homepage": "https://github.com/BoringCode/LaserTagServer",
+  "dependencies": {
+    "ip": "^0.3.2"
+  }
 }
