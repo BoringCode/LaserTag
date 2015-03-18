@@ -14,7 +14,7 @@ By default, the server will attempt to run on the external IP address of the cur
 
 ##Client
 
-Compile `gcc -Wall -o simpleClient.o simpleClient.c
+Compile `gcc -Wall -o simpleClient.o simpleClient.c`
 
 Run `./simpleClient.o 45.55.149.40 8888`
 
