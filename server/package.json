@@ -8,14 +8,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/BoringCode/LaserTagServer.git"
+    "url": "https://github.com/BoringCode/LaserTag.git"
   },
   "author": "Some people",
   "license": "GNU",
   "bugs": {
-    "url": "https://github.com/BoringCode/LaserTagServer/issues"
+    "url": "https://github.com/BoringCode/LaserTag/issues"
   },
-  "homepage": "https://github.com/BoringCode/LaserTagServer",
+  "homepage": "https://github.com/BoringCode/LaserTag",
   "dependencies": {
     "ip": "^0.3.2"
   }
