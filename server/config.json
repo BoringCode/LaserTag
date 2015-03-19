@@ -4,17 +4,17 @@
          "host": "127.0.0.1",
          "webPort": 3000,
          "socketPort": 8888
-      },
-      "db": {
-         "hosts": ["localhost"],
-         "username": "something"
+         },
+         "db": {
+            "hosts": ["localhost"],
+            "username": "something"
+         }
+         },
+         "prod": {
+          "server": {
+            "host": "45.55.149.40",
+            "webPort": 80,
+            "socketPort": 8888
+         }
       }
-   },
-	"prod": {
-		"server": {
-			"host": "45.55.149.40",
-			"webPort": 80,
-			"socketPort": 8888
-		}
-	}
-}
+   }
