@@ -1,0 +1,13 @@
+{
+   "dev": {
+      "server": {
+         "host": "127.0.0.1",
+         "webPort": 3000,
+         "socketPort": 8888
+      },
+      "db": {
+         "hosts": ["localhost"],
+         "username": "something"
+      }
+   }
+}
