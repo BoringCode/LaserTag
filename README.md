@@ -1,16 +1,40 @@
 #LaserTag
 A laser tag server written in Node.js and a laser tag client written in C
 
-##Production Server
+##Production
 
 A production server is running on `http://dev.bradleyrosenfeld.com` or `45.55.149.40`
+
+In production, `pm2` should be used to handle node processes.
 
 ##Server
 Install dependencies: `npm install`
 
-Run `node index.js`
+###Running
 
-By default, the server will attempt to run on the external IP address of the current system. This can be changed by editing the HOST variable in index.js. Runs on port `8888`
+On Windows:
+
+```
+$ cd ./server
+$ set NODE_ENV=dev
+$ node main
+```
+
+On Unix systems:
+```
+$ cd ./server
+$ NODE_ENV=dev
+$ node main
+```
+
+###Development
+
+The front end web server is located in `./server/web/`. Built using Express for routing.
+
+The socket server for communication with guns is located in `./server/socket/`
+
+Configuration can be found in `./server/config.json`. This is done on an environment basis (for example `dev`).
+
 
 ##Client
 
@@ -20,4 +44,7 @@ Run `./simpleClient.o 45.55.149.40 8888`
 
 ##Todo
 
-- All the things
+- Implement lasertag-db
+- Create API (and document) for socket server and web app to communicate with the database
+- Define and implement socket communication spec
+- Implement and complete web app for game management
