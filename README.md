@@ -34,7 +34,13 @@ Configuration can be found in `./server/config.json`. This is done on an environ
 
 A production server is running on `http://dev.bradleyrosenfeld.com` or `45.55.149.40`
 
-In production, `pm2` should be used to handle node processes.
+In production, `pm2` should be used to handle node processes. 
+
+Run
+```
+$ cd ./server
+$ NODE_ENV=prod pm2 start main.js
+```
 
 ##Client
 
