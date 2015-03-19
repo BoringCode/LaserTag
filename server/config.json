@@ -9,5 +9,12 @@
          "hosts": ["localhost"],
          "username": "something"
       }
-   }
+   },
+	"prod": {
+		"server": {
+			"host": "45.55.149.40",
+			"webPort": 80,
+			"socketPort": 8888
+		}
+	}
 }
