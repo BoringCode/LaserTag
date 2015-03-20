@@ -16,7 +16,8 @@
 
 //#define PORT "3490" // the port client will be connecting to 
 
-#define MAXDATASIZE 100 // max number of bytes we can get at once 
+#define MAXDATASIZE 100 // max number of bytes we can get at once
+#define MAC_ADDR = "BD:47:22:21:EC:95";
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
@@ -28,10 +29,20 @@ void *get_in_addr(struct sockaddr *sa)
     return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
+void client_hit(){
+    printf("I got hit!");
+}
+
+void client_shoot(){
+    printf("I made a shot");
+}
+
 int main(int argc, char *argv[])
 {
     int sockfd, numbytes;  
     char buf[MAXDATASIZE];
+    char client_sendline[100];
+    char client_receiveline[100];
     struct addrinfo hints, *servinfo, *p;
     int rv;
     char s[INET6_ADDRSTRLEN];
@@ -83,16 +94,29 @@ int main(int argc, char *argv[])
     printf("client: connecting to %s\n", s);
 
     freeaddrinfo(servinfo); // all done with this structure
+    //while(1)
+    //{
+      //  if(!strcmp("exit",client_sendline)){
+        //    break;
+        //}
+        bzero(client_sendline,MAXDATASIZE);
+        bzero(client_receiveline,MAXDATASIZE);
+        
+        //write(sockfd,client_sendline,strlen(client_sendline)+1);
+        //read(sockfd,client_receiveline,100);
+        
+        if ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
+            perror("recv");
+            exit(1);
+        }
 
-    if ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
-        perror("recv");
-        exit(1);
-    }
+        buf[numbytes] = '\0';
 
-    buf[numbytes] = '\0';
-
-    printf("client: received '%s'\n",buf);
-
+        printf("client: received '%s'\n",buf);
+        //fgets(client_sendline,5,stdin);
+        //recv(sockfd,client_receiveline,MAXDATASIZE-1,0);
+        //printf("%s",client_sendline);
+    //}
     close(sockfd);
 
     return 0;
