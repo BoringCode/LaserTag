@@ -1,0 +1,26 @@
+<!-- games_index.html -->
+    <div class="jumbotron text-center">
+        <h1>All Games Page</h1>
+
+        <p>{{ message }}</p>
+    </div>
+        <table class="table table-bordered" data-toggle="table" data-url="data1.json" data-cache="false" data-height="299">
+        <thead>
+        <tr>
+            <th data-field="id">Game ID</th>
+            <th data-field="name">Game  Name</th>
+            <th data-field="date">Game Date</th>
+            <th data-field="start_time">Game Start</th>
+            <th data-field="end_time">Game End</th>
+        </tr>
+        </thead>
+        <tbody>
+            <tr ng-repeat="game in games">
+                <td> {{ game.id }} </td>
+                <td> {{ game.name }} </td>
+                <td> {{ game.date }} </td>
+                <td> {{ game.start_time }} </td>
+                <td> {{ game.end_time }} </td>
+            </tr>
+        </tbody>
+        </table>
