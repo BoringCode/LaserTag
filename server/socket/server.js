@@ -27,6 +27,7 @@ net.createServer(function(sock) {
 	sock.on('data', function(data) {
         	//Print what was sent by the client
         	console.log('DATA ' + sock.remoteAddress + ': ' + data);
+		sock.write("You sent some data: " + data);
         });
 
 	// Add a 'close' event handler to this instance of socket
