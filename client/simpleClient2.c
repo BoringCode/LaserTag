@@ -8,29 +8,57 @@ and interects based on user input
 #include<string.h>    //strlen
 #include<sys/socket.h>    //socket
 #include<arpa/inet.h> //inet_addr
+#include <time.h>
 
-char* MAC_ADDR =  "AA:AA:AA:AA:AA:AA";
+char* MAC_ADDR =  "AA:AA:AA:AA:AA:AA";;
+#define CONNECTED 1;
 
-void shoot(int sock,char* message){
-    message = malloc(sizeof(char)*1000);
-    sprintf(message,"%s sent a shot",MAC_ADDR);
-    puts(message);
-    if(send(sock,message,strlen(message),0)<0){
-        free(message);
-        perror("Send failed");
-    }
-    free(message);
+char* get_time(){
+    time_t timer;
+    struct tm* tm_info;
+    char time_buffer[26];
+
+    time(&timer);
+    tm_info = localtime(&timer);
+
+    strftime(time_buffer,26,"%Y-%m-%d %H:%M:%S", tm_info);
+    return time_buffer;
 }
 
-void hit(int sock,char* message){
-    message = malloc(sizeof(char)*1000);
-    sprintf(message,"%s got hit!",MAC_ADDR);
-    puts(message);
+void enter_game(int sock,char message[1000]){
+    sprintf(message,"%s wants to enter game at %s\n",MAC_ADDR,get_time());
+    printf("%s",message);
     if(send(sock,message,strlen(message),0)<0){
-        free(message);
         perror("Send failed");
     }
-    free(message);
+    memset(message,'0',1000);
+}
+
+void exit_game(int sock,char message[1000]){
+    sprintf(message,"%s exits game at %s\n",MAC_ADDR,get_time());
+    printf("%s",message);
+    if(send(sock,message,strlen(message),0)<0){
+        perror("Send failed");
+    }
+    memset(message,'0',1000);
+}
+
+void shoot(int sock,char message[1000]){
+    sprintf(message,"%s sent a shot at %s\n",MAC_ADDR,get_time());
+    printf("%s",message);
+    if(send(sock,message,strlen(message),0)<0){
+        perror("Send failed");
+    }
+    memset(message,'0',1000);
+}
+
+void hit(int sock,char message[1000]){
+    sprintf(message,"%s got hit at %s\n",MAC_ADDR,get_time());
+    printf("%s",message);
+    if(send(sock,message,strlen(message),0)<0){
+        perror("Send failed");
+    }
+    memset(message,'0',1000);
 }
 
 int main(int argc , char *argv[])
@@ -40,6 +68,8 @@ int main(int argc , char *argv[])
     int port;
     struct sockaddr_in server;
     char message[1000] , server_reply[2000];
+    int connected = 0;
+    get_time();
 
     if(argc != 3){
         printf("ussage: %s host port\n",argv[0]);
@@ -74,7 +104,8 @@ int main(int argc , char *argv[])
     }
      
     printf("%s connected to %s:%d\n",MAC_ADDR,host,port);
-     
+    connected = CONNECTED;
+    enter_game(sock,message); 
     //keep communicating with server
     while(1)
     {
@@ -88,6 +119,7 @@ int main(int argc , char *argv[])
             hit(sock,message);
         }
         else if(!strcmp("3",message)){
+            exit_game(sock,message);
             printf("%s exiting\n", MAC_ADDR);
             break;
         }
@@ -100,17 +132,15 @@ int main(int argc , char *argv[])
                 puts("Send failed");
                 return 1;
             }
-         
-            //Receive a reply from the server
-            if( recv(sock , server_reply , 2000 , 0) < 0)
-            {
-                puts("recv failed");
-                break;
-            }
-         
-            printf("%s:%d reply : %s\n",host,port,server_reply);
-            //puts(server_reply);
         }
+        //Receive a reply from the server
+        if( recv(sock , server_reply , 2000 , 0) < 0)
+        { 
+            puts("recv failed");
+            break;
+        }
+         
+        printf("%s:%d reply : %s\n",host,port,server_reply);
     }        
      
     close(sock);
