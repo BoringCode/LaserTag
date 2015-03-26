@@ -1,0 +1,20 @@
+extends layout
+
+block content
+	div(class="jumbotron text-center")
+		h1 All Teams Page
+
+	p {{ message }}
+	table(class="table table-bordered" data-toggle="table" data-url="data1.json" data-cache="false" data-height="299")
+		thead
+			tr
+				th(data-field="id") Team ID
+				th(data-field="name") Team Name
+				th(data-field="color") Team Color
+				th(data-field="slogan") Team Slogan
+		tbody
+			tr(ng-repeat="game in games")
+				td {{ teams.id }}
+				td {{ teams.name }}
+				td {{ teams.color }}
+				td {{ teams.slogan }}
