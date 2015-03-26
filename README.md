@@ -44,6 +44,8 @@ $ NODE_ENV=prod pm2 start main.js
 
 Compile `gcc -Wall -o simpleClient.o simpleClient.c`
 
+or use the Makefile provided for simpleClient2.c program
+
 Run `./simpleClient.o 45.55.149.40 8888`
 
 ##Todo

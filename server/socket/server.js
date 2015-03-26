@@ -36,6 +36,12 @@ net.createServer(function(sock) {
 		console.log('LASER TAG CLIENT CLOSED: ' + sock.remoteAddress +' '+ sock.remotePort);
 	});
 
+	//Handle errors
+	sock.on("error", function(e) {
+		console.log("Caught an error");
+		console.log(e);
+	});
+
 }).listen(PORT, HOST);
 
 //Tell everyone where I'm running

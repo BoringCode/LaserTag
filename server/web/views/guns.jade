@@ -1,0 +1,18 @@
+extends layout
+
+block content
+	div(class="jumbotron text-center")
+		h1 All Guns Page
+
+	p {{ message }}
+	table(class="table table-bordered" data-toggle="table" data-url="data1.json" data-cache="false" data-height="299")
+		thead
+			tr
+				th(data-field="gun_id") Gun ID
+				th(data-field="gun_name") Gun Name
+				th(data-field="gun_team") Gun Team
+		tbody
+			tr(ng-repeat="game in games")
+				td {{ guns.id }}
+				td {{ guns.name }}
+				td {{ guns.team }}

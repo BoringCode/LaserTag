@@ -1,0 +1,26 @@
+extends layout
+
+block content
+	div(class="jumbotron text-center")
+		h1 All Stats Page
+		
+	p {{ message }}
+	table(class="table table-bordered" data-toggle="table" data-url="data1.json" data-cache="false" data-height="299")
+		thead
+			tr
+				th(data-field="game_id") Game ID
+				th(data-field="gun_id)") Gun ID
+				th(data-field="team_id") Team ID
+				th(data-field="kills") Kills
+				th(data-field="deaths") Deaths
+				th(data-field="kd") K/D Ratio
+				th(data-field="ammo") Ammo
+		tbody
+			tr(ng-repeat="game in games")
+				td {{ stats.game_id }}
+				td {{ stats.gun_id }}
+				td {{ stats.team_id }}
+				td {{ stats.kills }}
+				td {{ stats.deaths }}
+				td K/D Placeholder
+				td {{ stats.ammo }}
