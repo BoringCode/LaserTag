@@ -4,19 +4,19 @@ block content
 	div(class="jumbotron text-center")
 		h1 All Games Page
 
-		p {{ message }}
-		table(class="table table-bordered" data-toggle="table" data-url="data1.json" data-cache="false" data-height="299")
-			thead
-				tr
-					th(data-field="id") Game ID
-					th(data-field="name") Game  Name
-					th(data-field="date") Game Date
-					th(data-field="start_time") Game Start
-					th(data-field="end_time") Game End
-			tbody
-				tr(ng-repeat="game in games")
-					td {{ game.id }}
-					td {{ game.name }}
-					td {{ game.date }}
-					td {{ game.start_time }}
-					td {{ game.end_time }}
+	p {{ message }}
+	table(class="table table-bordered" data-toggle="table" data-url="data1.json" data-cache="false" data-height="299")
+		thead
+			tr
+				th(data-field="id") Game ID
+				th(data-field="name") Game  Name
+				th(data-field="date") Game Date
+				th(data-field="start_time") Game Start
+				th(data-field="end_time") Game End
+		tbody
+			tr(ng-repeat="game in games")
+				td {{ game.id }}
+				td {{ game.name }}
+				td {{ game.date }}
+				td {{ game.start_time }}
+				td {{ game.end_time }}
