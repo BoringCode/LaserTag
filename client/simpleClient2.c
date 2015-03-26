@@ -9,33 +9,58 @@ and interects based on user input
 #include<sys/socket.h>    //socket
 #include<arpa/inet.h> //inet_addr
 #include <time.h>
+#include <unistd.h>
 
-char* MAC_ADDR =  "AA:AA:AA:AA:AA:AA";;
 #define CONNECTED 1;
 
-char* get_time(){
+struct LaserGun{
+    char mac_address[18];
+    char team[50];
+};
+
+char MAC_ADDR[18]; 
+
+void configureGun(struct LaserGun *gun){
+    printf("Configuring the Gun\n");
+    strcpy(gun->mac_address,"AA:AA:AA:AA:AA:AA");
+    strcpy(MAC_ADDR,gun->mac_address);
+    strcpy(gun->team,"Red");
+    printf("%s configured\n",gun->mac_address);
+    printf("%s is plays for %s\n", gun->mac_address,gun->team);
+}
+
+void get_time(char time_buffer[26]){
     time_t timer;
     struct tm* tm_info;
-    char time_buffer[26];
 
     time(&timer);
     tm_info = localtime(&timer);
-
+    
     strftime(time_buffer,26,"%Y-%m-%d %H:%M:%S", tm_info);
-    return time_buffer;
 }
 
 void enter_game(int sock,char message[1000]){
-    sprintf(message,"%s wants to enter game at %s\n",MAC_ADDR,get_time());
+    char time_buffer[26];
+    get_time(time_buffer);
+    char server_reply[2000];
+    sprintf(message,"%s wants to enter game at %s\n",MAC_ADDR,time_buffer);
     printf("%s",message);
     if(send(sock,message,strlen(message),0)<0){
         perror("Send failed");
     }
+    if( recv(sock , server_reply , 2000 , 0) < 0)
+    { 
+        puts("recv failed");
+    }
+    printf("Server says: %s\n",server_reply);
+
     memset(message,'0',1000);
 }
 
 void exit_game(int sock,char message[1000]){
-    sprintf(message,"%s exits game at %s\n",MAC_ADDR,get_time());
+    char time_buffer[26];
+    get_time(time_buffer);
+    sprintf(message,"%s exits game at %s\n",MAC_ADDR,time_buffer);
     printf("%s",message);
     if(send(sock,message,strlen(message),0)<0){
         perror("Send failed");
@@ -44,7 +69,9 @@ void exit_game(int sock,char message[1000]){
 }
 
 void shoot(int sock,char message[1000]){
-    sprintf(message,"%s sent a shot at %s\n",MAC_ADDR,get_time());
+    char time_buffer[26];
+    get_time(time_buffer);
+    sprintf(message,"%s sent a shot at %s\n",MAC_ADDR,time_buffer);
     printf("%s",message);
     if(send(sock,message,strlen(message),0)<0){
         perror("Send failed");
@@ -53,7 +80,9 @@ void shoot(int sock,char message[1000]){
 }
 
 void hit(int sock,char message[1000]){
-    sprintf(message,"%s got hit at %s\n",MAC_ADDR,get_time());
+    char time_buffer[26];
+    get_time(time_buffer);
+    sprintf(message,"%s got hit at %s\n",MAC_ADDR,time_buffer);
     printf("%s",message);
     if(send(sock,message,strlen(message),0)<0){
         perror("Send failed");
@@ -69,7 +98,10 @@ int main(int argc , char *argv[])
     struct sockaddr_in server;
     char message[1000] , server_reply[2000];
     int connected = 0;
-    get_time();
+    int numbytes;
+    struct LaserGun gun;
+    configureGun(&gun);
+    //strcpy(MAC_ADDR, gun.mac_address); 
 
     if(argc != 3){
         printf("ussage: %s host port\n",argv[0]);
@@ -134,13 +166,15 @@ int main(int argc , char *argv[])
             }
         }
         //Receive a reply from the server
-        if( recv(sock , server_reply , 2000 , 0) < 0)
+        if((numbytes =  recv(sock , server_reply , 2000 , 0)) < 0)
         { 
             puts("recv failed");
             break;
         }
          
-        printf("%s:%d reply : %s\n",host,port,server_reply);
+        printf("%s:%d reply : ",host,port);
+        write(0,server_reply,numbytes);
+        printf("\n");
     }        
      
     close(sock);
