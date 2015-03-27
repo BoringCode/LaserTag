@@ -6,8 +6,8 @@ router.get('/', function(req, res, next) {
   res.render('games');
 });
 
-router.get('/test', function(req, res, next) {
-	res.send('message');
+router.get('/:id/', function(req, res, next) {
+   res.send("Display game ID: " + req.params.id);
 });
 
 module.exports = router;

@@ -6,4 +6,8 @@ router.get('/', function(req, res, next) {
   res.render('stats');
 });
 
+router.get('/:id/', function(req, res, next) {
+   res.send("Display stats ID: " + req.params.id);
+});
+
 module.exports = router;
