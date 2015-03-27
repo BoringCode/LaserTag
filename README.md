@@ -5,6 +5,8 @@ A laser tag server written in Node.js and a laser tag client written in C
 ##Server
 Install dependencies: `npm install`
 
+If this is your first time, install Grunt: `npm install -g grunt-cli`
+
 ###Running
 
 On Windows:
@@ -56,7 +58,7 @@ All Javascript development should be done inside the source folder. Split your A
 
 Grunt is a task runner that we are using for compiling our Javascript for production. The default task will output unminified JS files and will watch the src folder for changes.
 
-Running grunt is dead simple. If this is your first time, install grunt by running `npm install -g grunt-cli`
+Running grunt is dead simple.
 
 ```
 $ cd ./server
