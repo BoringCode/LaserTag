@@ -38,7 +38,7 @@ LaserTag/server/
 ......../public
 ............/fonts
 ............/js
-............/stylesheets
+............/css
 ......../routes
 ......../views
 ......../src

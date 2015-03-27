@@ -8,8 +8,6 @@ Main AngluarJS file for LaserTagAdminPage
 
 var app = angular.module('laserTagAdminApp', []);
 
-console.log("launching app");
-
 
 app.controller('GamesListCtrl',function($scope,$http){
     //game page of site
