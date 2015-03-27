@@ -56,7 +56,7 @@ All Javascript development should be done inside the source folder. Split your A
 
 Grunt is a task runner that we are using for compiling our Javascript for production. The default task will output unminified JS files and will watch the src folder for changes.
 
-Running grunt is dead simple. If this is your first time, install grunt by running `npm install grunt -g`
+Running grunt is dead simple. If this is your first time, install grunt by running `npm install -g grunt-cli`
 
 ```
 $ cd ./server
