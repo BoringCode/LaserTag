@@ -5,12 +5,11 @@
  * Simple socket server for communicating with guns
  */
 
- var ip = require("ip");
- var net = require("net");
+var ip = require("ip");
+var net = require("net");
 
-
- var HOST = config.server.host || ip.address();
- var PORT = config.server.socketPort || 8888;
+var HOST = ip.address();
+var PORT = 8888;
 
 // Create a server instance, and chain the listen function to it
 net.createServer(function(sock) {
