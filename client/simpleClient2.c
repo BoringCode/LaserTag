@@ -26,7 +26,7 @@ void configureGun(struct LaserGun *gun){
     strcpy(MAC_ADDR,gun->mac_address);
     strcpy(gun->team,"Red");
     printf("%s configured\n",gun->mac_address);
-    printf("%s is plays for %s\n", gun->mac_address,gun->team);
+    printf("%s plays for %s\n", gun->mac_address,gun->team);
 }
 
 void get_time(char time_buffer[26]){
@@ -39,7 +39,7 @@ void get_time(char time_buffer[26]){
     strftime(time_buffer,26,"%Y-%m-%d %H:%M:%S", tm_info);
 }
 
-void enter_game(int sock,char message[1000]){
+void enter_game(int sock,char message[1000], struct LaserGun *gun){
     char time_buffer[26];
     get_time(time_buffer);
     char server_reply[2000];
@@ -53,6 +53,8 @@ void enter_game(int sock,char message[1000]){
         puts("recv failed");
     }
     printf("Server says: %s\n",server_reply);
+
+    configureGun(gun);
 
     memset(message,'0',1000);
 }
@@ -100,7 +102,6 @@ int main(int argc , char *argv[])
     int connected = 0;
     int numbytes;
     struct LaserGun gun;
-    configureGun(&gun);
     //strcpy(MAC_ADDR, gun.mac_address); 
 
     if(argc != 3){
@@ -137,7 +138,7 @@ int main(int argc , char *argv[])
      
     printf("%s connected to %s:%d\n",MAC_ADDR,host,port);
     connected = CONNECTED;
-    enter_game(sock,message); 
+    enter_game(sock,message,&gun); 
     //keep communicating with server
     while(1)
     {
