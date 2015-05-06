@@ -1,6 +1,6 @@
 /* 
 2015 Dustin Waldron, Micah Russell, Bradley Rosenfeld
-
+Hey there
 Second Client Program that keeps communication with Laser Tag Server
 and interects based on user input
 */
