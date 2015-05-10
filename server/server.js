@@ -35,37 +35,44 @@ var Game = function(options) {
 	this.players = {};
 }
 
+Game.prototype.addPlayer = function(id) {
+	this.players.id = new Player();
+}
+
 Game.prototype.startServer = function() {
+	var self = this;
 	// Create a server instance, and chain the listen function to it
 	net.createServer(function(sock) {
 		// We have a connection - a socket object is assigned to the connection automatically
-		console.log('LASER TAG CLIENT CONNECTED: ' + sock.remoteAddress +':'+ sock.remotePort);
-
-		//Send stuff to the client
-		sock.write("HEY THERE");
+		console.log(colors.info('LASER TAG CLIENT CONNECTED: ') + colors.debug(sock.remoteAddress +':'+ sock.remotePort));
 
 		// Add a 'data' event handler to this instance of socket
 		sock.on('data', function(data) {
-			//Print what was sent by the client
-			console.log('DATA ' + sock.remoteAddress + ': ' + data);
-			sock.write("You sent some data: " + data);
+			console.log(colors.info("LASER TAG CLIENT DATA: ") + data);
+			var obj = JSON.parse(data);
+			console.log(obj);
+			if (!obj.id in self.players) {
+				self.addPlayer(obj.id);
+			} else {
+				var player = self.players.id;
+			}
 	   });
 
 		// Add a 'close' event handler to this instance of socket
 		sock.on('close', function(data) {
+			console.log(data);
 			//Display a message on close
-			console.log('LASER TAG CLIENT CLOSED: ' + sock.remoteAddress +' '+ sock.remotePort);
+			console.log('LASER TAG CLIENT CLOSED: ');
 		});
 
 		//Handle errors
 		sock.on("error", function(e) {
-			console.log("Caught an error");
-			console.log(e);
+			console.log(colors.error("LASER TAG CLIENT ERROR: ") + colors.debug(e))
 		});
 
-	}).listen(this.settings.port, this.settings.host);
+	}).listen(self.settings.port, self.settings.host);
 	//Tell everyone where I'm running
-	console.log(colors.info('Laser Tag server listening on ') + colors.debug(this.settings.host +':'+ this.settings.port).underline);
+	console.log(colors.info('Laser Tag server listening on ') + colors.debug(self.settings.host +':'+ self.settings.port));
 };
 
 var Player = function(options) {
@@ -74,6 +81,7 @@ var Player = function(options) {
 
 
 var main = function() {
+	console.reset();
 	console.log("Welcome to Laser Tag!\nPlease begin by creating a new game and specifying options.\n")
 	var game;
 	var schema = {
@@ -82,6 +90,7 @@ var main = function() {
 				description: colors.prompt("Name:"),
 				pattern: /^[a-zA-Z\s\-]+$/,
 				message: colors.error('Name must be only letters, spaces, or dashes'),
+				default: "Some new game",
 				required: true
 			},
 			numTeams: {
@@ -150,5 +159,4 @@ var main = function() {
 		}
 	});
 }
-
 main();
