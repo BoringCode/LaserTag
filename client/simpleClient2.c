@@ -54,14 +54,14 @@ void enter_game(int sock,char message[1000], struct LaserGun *gun){
     printf("Server says: %s\n",server_reply);
 
     configureGun(gun);
-
+    //sprintf(message,"{\"id\":\"%s\",\"time\":\"%s\"}\n",MAC_ADDR,time_buffer);
     memset(message,'0',1000);
 }
 
 void exit_game(int sock,char message[1000]){
     char time_buffer[26];
     get_time(time_buffer);
-    sprintf(message,"{\"id\":\"%s\",\"exit\":\"TRUE\",\"time\":\"%s\"}\n",MAC_ADDR,time_buffer);
+    sprintf(message,"{\"id\":\"%s\",\"exit\":\"true\",\"time\":\"%s\"}\n",MAC_ADDR,time_buffer);
     printf("%s",message);
     if(send(sock,message,strlen(message),0)<0){
         perror("Send failed");
@@ -73,7 +73,7 @@ void shoot(int sock,char message[1000]){
     char time_buffer[26];
     get_time(time_buffer);
     // formatted for Server {id: "XX.XX.XXX.XXX",time:"XX:XX:XX"}
-    sprintf(message,"{\"id\":\"%s\",\"shot\":\"TRUE\",\"time\":\"%s\"}\n",MAC_ADDR,time_buffer);
+    sprintf(message,"{\"id\":\"%s\",\"shot\":\"true\",\"time\":\"%s\"}\n",MAC_ADDR,time_buffer);
     printf("%s",message);
     if(send(sock,message,strlen(message),0)<0){
         perror("Send failed");
