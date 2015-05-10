@@ -36,7 +36,7 @@ var Game = function(options) {
 }
 
 Game.prototype.addPlayer = function(id) {
-	this.players.id = new Player();
+	this.players.id = new Player({id: id, somethingElse: "yep"});
 }
 
 Game.prototype.startServer = function() {
@@ -50,12 +50,12 @@ Game.prototype.startServer = function() {
 		sock.on('data', function(data) {
 			console.log(colors.info("LASER TAG CLIENT DATA: ") + data);
 			var obj = JSON.parse(data);
-			console.log(obj);
+			console.log(obj.id);
+			console.log(self.players);
 			if (!obj.id in self.players) {
 				self.addPlayer(obj.id);
-				console.log(self.players);
 			} else {
-				var player = self.players.id;
+				var player = self.players[obj.id];
 				console.log(player);
 			}
 			sock.write("thanks man");
