@@ -53,8 +53,10 @@ Game.prototype.startServer = function() {
 			console.log(obj.id);
 			console.log(self.players);
 			if (!obj.id in self.players) {
+				console.log("player doesn't exist");
 				self.addPlayer(obj.id);
 			} else {
+				console.log("Player should exist");
 				var player = self.players[obj.id];
 				console.log(player);
 			}
