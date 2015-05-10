@@ -36,7 +36,7 @@ var Game = function(options) {
 }
 
 Game.prototype.addPlayer = function(id) {
-	this.players[id] = new Player({delay: shotFrequency});
+	this.players[id] = new Player({delay: self.settings.shotFrequency});
 	return this.players[id];
 }
 
