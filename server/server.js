@@ -53,9 +53,12 @@ Game.prototype.startServer = function() {
 			console.log(obj);
 			if (!obj.id in self.players) {
 				self.addPlayer(obj.id);
+				console.log(self.players);
 			} else {
 				var player = self.players.id;
+				console.log(player);
 			}
+			sock.write("thanks man");
 	   });
 
 		// Add a 'close' event handler to this instance of socket
