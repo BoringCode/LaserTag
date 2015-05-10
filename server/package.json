@@ -18,6 +18,9 @@
   },
   "homepage": "https://github.com/BoringCode/LaserTag",
   "dependencies": {
-    "ip": "^0.3.2"
+    "colors": "^1.1.0",
+    "ip": "^0.3.2",
+    "moment": "^2.10.2",
+    "prompt": "^0.2.14"
   }
 }
