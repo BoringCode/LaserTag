@@ -1,6 +1,5 @@
 /* 
 2015 Dustin Waldron, Micah Russell, Bradley Rosenfeld
-Hey there
 Second Client Program that keeps communication with Laser Tag Server
 and interects based on user input
 */
@@ -43,7 +42,7 @@ void enter_game(int sock,char message[1000], struct LaserGun *gun){
     char time_buffer[26];
     get_time(time_buffer);
     char server_reply[2000];
-    sprintf(message,"%s wants to enter game at %s\n",MAC_ADDR,time_buffer);
+    sprintf(message,"{\"id\":\"%s\",\"time\":\"%s\"}\n",MAC_ADDR,time_buffer);
     printf("%s",message);
     if(send(sock,message,strlen(message),0)<0){
         perror("Send failed");
@@ -62,7 +61,7 @@ void enter_game(int sock,char message[1000], struct LaserGun *gun){
 void exit_game(int sock,char message[1000]){
     char time_buffer[26];
     get_time(time_buffer);
-    sprintf(message,"%s exits game at %s\n",MAC_ADDR,time_buffer);
+    sprintf(message,"{\"id\":\"%s\",\"exit\":\"TRUE\",\"time\":\"%s\"}\n",MAC_ADDR,time_buffer);
     printf("%s",message);
     if(send(sock,message,strlen(message),0)<0){
         perror("Send failed");
@@ -73,7 +72,8 @@ void exit_game(int sock,char message[1000]){
 void shoot(int sock,char message[1000]){
     char time_buffer[26];
     get_time(time_buffer);
-    sprintf(message,"%s sent a shot at %s\n",MAC_ADDR,time_buffer);
+    // formatted for Server {id: "XX.XX.XXX.XXX",time:"XX:XX:XX"}
+    sprintf(message,"{\"id\":\"%s\",\"shot\":\"TRUE\",\"time\":\"%s\"}\n",MAC_ADDR,time_buffer);
     printf("%s",message);
     if(send(sock,message,strlen(message),0)<0){
         perror("Send failed");
@@ -84,7 +84,7 @@ void shoot(int sock,char message[1000]){
 void hit(int sock,char message[1000]){
     char time_buffer[26];
     get_time(time_buffer);
-    sprintf(message,"%s got hit at %s\n",MAC_ADDR,time_buffer);
+    sprintf(message,"{\"id\":\"%s\",\"hitBy\":\"XX\",\"time\":\"%s\"}\n",MAC_ADDR,time_buffer);
     printf("%s",message);
     if(send(sock,message,strlen(message),0)<0){
         perror("Send failed");
