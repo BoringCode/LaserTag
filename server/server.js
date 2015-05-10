@@ -36,7 +36,8 @@ var Game = function(options) {
 }
 
 Game.prototype.addPlayer = function(id) {
-	this.players.id = new Player({id: id, somethingElse: "yep"});
+	this.players[id] = new Player({delay: shotFrequency});
+	return this.players[id];
 }
 
 Game.prototype.startServer = function() {
@@ -49,17 +50,30 @@ Game.prototype.startServer = function() {
 		// Add a 'data' event handler to this instance of socket
 		sock.on('data', function(data) {
 			console.log(colors.info("LASER TAG CLIENT DATA: ") + data);
+
 			var obj = JSON.parse(data);
-			console.log(obj.id);
-			console.log(self.players);
-			if (!obj.id in self.players) {
-				console.log("player doesn't exist");
-				self.addPlayer(obj.id);
+			var player;
+
+			//Get player
+			if (!(obj.id in self.players)) {
+				console.log("player doesn't exist, creating player");
+				player = self.addPlayer(obj.id);
 			} else {
 				console.log("Player should exist");
-				var player = self.players[obj.id];
-				console.log(player);
+				player = self.players[obj.id];
 			}
+
+			console.log(player);
+
+			//Record shots
+			if (obj.shot) {
+				if (player.recordShot(obj.time)) {
+					sock.write("shot recorded, thanks");
+				} else {
+					sock.write("Invalid shot");
+				}
+			}
+
 			sock.write("thanks man");
 	   });
 
@@ -76,12 +90,29 @@ Game.prototype.startServer = function() {
 		});
 
 	}).listen(self.settings.port, self.settings.host);
+
 	//Tell everyone where I'm running
 	console.log(colors.info('Laser Tag server listening on ') + colors.debug(self.settings.host +':'+ self.settings.port));
 };
 
 var Player = function(options) {
 	this.settings = options;
+	this.shots =[];
+	this.hits = [];
+}
+Player.prototype.recordShot = function(timestamp) {
+	var self = this;
+	//Make sure player hasn't exceeded number of shots
+	if (self.shots.length >= self.settings.maxShots) return false;
+	//Validate shot frequency
+	var time = moment(timestamp, "YYYY-MM-DD h:m:s");
+	var previousShot = self.shots[self.shots.length-1];
+	if (moment.isMoment(previousShot) && previousShot.add(self.settings.delay, "s").isBefore(time)) {
+		self.shots.push(time);
+		return true;
+	} else {
+		return false;
+	}
 }
 
 
