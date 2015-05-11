@@ -45,8 +45,9 @@ Game.prototype.startServer = function() {
 	var self = this;
 	// Create a server instance, and chain the listen function to it
 	net.createServer(function(sock) {
+		var clientInfo = sock.remoteAddress + ":" + sock.remotePort;
 		// We have a connection - a socket object is assigned to the connection automatically
-		console.log(colors.info('LASER TAG CLIENT CONNECTED: ') + colors.debug(sock.remoteAddress +':'+ sock.remotePort));
+		console.log(colors.info('LASER TAG CLIENT CONNECTED: ') + colors.debug(clientInfo));
 
 		// Add a 'data' event handler to this instance of socket
 		sock.on('data', function(data) {
@@ -57,37 +58,48 @@ Game.prototype.startServer = function() {
 
 			//Get player
 			if (!(obj.id in self.players)) {
-				console.log("player doesn't exist, creating player");
 				player = self.addPlayer(obj.id);
 			} else {
-				console.log("Player should exist");
 				player = self.players[obj.id];
 			}
-
-			console.log(player);
-
+			
+			console.log(colors.info("LASER TAG CLIENT: ") + colors.data("Player loaded: "), player);
+			
 			//Record shots
 			if (obj.shot) {
 				if (player.recordShot(obj.time)) {
-					sock.write("shot recorded, thanks");
+					console.log(colors.info("LASER TAG CLIENT: ") + colors.data("Shot recorded"));
+					sock.write("shot recorded, thanks\n");
 				} else {
-					sock.write("Invalid shot");
+					console.log(colors.info("LASER TAG CLIENT: ") + colors.warn("Invalid shot reported"));
+					sock.write("Invalid shot\n");
+				}
+			}
+			
+			//record hit
+			if (obj.hitBy) {
+				if (player.recordHit(obj.hitBy, obj.time)) {
+					console.log(colors.info("LASER TAG CLIENT: ") + colors.data("Hit recorded"));
+					sock.write("hit record, thanks\n");
+				} else {
+					console.log(colors.info("LASER TAG CLIENT: ") + colors.warn("Invalid hit reported"));
+					sock.write("Invalid hit\n");
 				}
 			}
 
 			sock.write("thanks man");
+			console.log("\n");
 	   });
 
 		// Add a 'close' event handler to this instance of socket
 		sock.on('close', function(data) {
-			console.log(data);
 			//Display a message on close
-			console.log('LASER TAG CLIENT CLOSED: ');
+			console.log(colors.info('LASER TAG CLIENT CLOSED: ') + colors.debug(clientInfo) + "\n");
 		});
 
 		//Handle errors
 		sock.on("error", function(e) {
-			console.log(colors.error("LASER TAG CLIENT ERROR: ") + colors.debug(e))
+			console.log(colors.error("LASER TAG CLIENT ERROR: ") + colors.data(e))
 		});
 
 	}).listen(self.settings.port, self.settings.host);
@@ -101,6 +113,15 @@ var Player = function(options) {
 	this.shots =[];
 	this.hits = [];
 }
+Player.prototype.recordHit = function(shooter, timestamp) {
+	var self = this;
+	var shot = {
+		shooter: shooter,
+		time: moment(timestamp, "YYYY-MM-DD h:m:s"),
+	}
+	self.hits.push(shot);
+	return true;
+}
 Player.prototype.recordShot = function(timestamp) {
 	var self = this;
 	//Make sure player hasn't exceeded number of shots
@@ -108,7 +129,7 @@ Player.prototype.recordShot = function(timestamp) {
 	//Validate shot frequency
 	var time = moment(timestamp, "YYYY-MM-DD h:m:s");
 	var previousShot = self.shots[self.shots.length-1];
-	if (moment.isMoment(previousShot) && previousShot.add(self.settings.delay, "s").isBefore(time)) {
+	if (self.shots.length === 0 || (moment.isMoment(previousShot) && previousShot.add(self.settings.delay, "s").isBefore(time))) {
 		self.shots.push(time);
 		return true;
 	} else {
