@@ -39,6 +39,7 @@ void get_time(char time_buffer[26]){
 }
 
 void enter_game(int sock,char message[1000], struct LaserGun *gun){
+    configureGun(gun);
     char time_buffer[26];
     get_time(time_buffer);
     char server_reply[2000];
@@ -53,7 +54,6 @@ void enter_game(int sock,char message[1000], struct LaserGun *gun){
     }
     printf("Server says: %s\n",server_reply);
 
-    configureGun(gun);
     //sprintf(message,"{\"id\":\"%s\",\"time\":\"%s\"}\n",MAC_ADDR,time_buffer);
     memset(message,'0',1000);
 }
