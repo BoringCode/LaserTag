@@ -29,18 +29,21 @@ console.reset = function () {
   return process.stdout.write('\033c');
 }
 
-
+/* 
+ * Game constructor
+ * Takes an object containing settings for the game
+ */
 var Game = function(options) {
 	this.settings = options;
 	this.players = {};
 }
-
+//Add new players to the game, requires a unique ID
 Game.prototype.addPlayer = function(id) {
 	var self = this;
 	this.players[id] = new Player({maxShots: self.settings.maxShots, delay: self.settings.shotFrequency});
 	return this.players[id];
 }
-
+//Start the game server and process data from each player client
 Game.prototype.startServer = function() {
 	var self = this;
 	// Create a server instance, and chain the listen function to it
@@ -108,11 +111,16 @@ Game.prototype.startServer = function() {
 	console.log(colors.info('Laser Tag server listening on ') + colors.debug(self.settings.host +':'+ self.settings.port));
 };
 
+/* 
+ * Player constructor
+ * Takes an object containing settings
+ */
 var Player = function(options) {
 	this.settings = options;
 	this.shots =[];
 	this.hits = [];
 }
+//Record hits on the player
 Player.prototype.recordHit = function(shooter, timestamp) {
 	var self = this;
 	var shot = {
@@ -122,6 +130,7 @@ Player.prototype.recordHit = function(shooter, timestamp) {
 	self.hits.push(shot);
 	return true;
 }
+//Record shots made by the player, rate limited according to the game settings that the player is apart of
 Player.prototype.recordShot = function(timestamp) {
 	var self = this;
 	//Make sure player hasn't exceeded number of shots
@@ -137,7 +146,7 @@ Player.prototype.recordShot = function(timestamp) {
 	}
 }
 
-
+//Gets settings from the user and starts a new game instance
 var main = function() {
 	console.reset();
 	console.log("Welcome to Laser Tag!\nPlease begin by creating a new game and specifying options.\n")
