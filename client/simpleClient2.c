@@ -81,10 +81,10 @@ void shoot(int sock,char message[1000]){
     memset(message,'0',1000);
 }
 
-void hit(int sock,char message[1000]){
+void hit(int sock,char message[1000],char SHOOTER_MAC[50]){
     char time_buffer[26];
     get_time(time_buffer);
-    sprintf(message,"{\"id\":\"%s\",\"hitBy\":\"XX\",\"time\":\"%s\"}\n",MAC_ADDR,time_buffer);
+    sprintf(message,"{\"id\":\"%s\",\"hitBy\":\"%s\",\"time\":\"%s\"}\n",MAC_ADDR,SHOOTER_MAC,time_buffer);
     printf("%s",message);
     if(send(sock,message,strlen(message),0)<0){
         perror("Send failed");
@@ -98,7 +98,7 @@ int main(int argc , char *argv[])
     char* host;
     int port;
     struct sockaddr_in server;
-    char message[1000] , server_reply[2000];
+    char message[1000] , server_reply[2000], SHOOT[1],SHOOTER_MAC[100];
     int connected = 0;
     int numbytes;
     struct LaserGun gun;
@@ -144,12 +144,11 @@ int main(int argc , char *argv[])
     {
         printf("Enter message (1. Shoot 2. Hit 3. Exit) : ");
         scanf("%s" , message);
-
+        
+        
+// Work on getting string compare with multiple things in a string
         if(!strcmp("1",message)){
             shoot(sock,message);
-        }
-        else if(!strcmp("2",message)){
-            hit(sock,message);
         }
         else if(!strcmp("3",message)){
             exit_game(sock,message);
@@ -157,13 +156,19 @@ int main(int argc , char *argv[])
             break;
         }
         else{
-            printf("%s said: %s\n",MAC_ADDR,message);
+            int n = sscanf(message,"%s,%s",SHOOT,SHOOTER_MAC);
+            if(!strcmp("2",SHOOT)){
+                hit(sock,message,SHOOTER_MAC);
+            }
+            else{
+                printf("%s said: %s\n",MAC_ADDR,message);
          
-            //Send some data
-            if( send(sock , message , strlen(message) , 0) < 0)
-            {
-                puts("Send failed");
-                return 1;
+                //Send some data
+                if( send(sock , message , strlen(message) , 0) < 0)
+                {
+                    puts("Send failed");
+                    return 1;
+                }
             }
         }
         //Receive a reply from the server
@@ -175,9 +180,8 @@ int main(int argc , char *argv[])
          
         printf("%s:%d reply : ",host,port);
         write(0,server_reply,numbytes);
-        printf("\n");
-    }        
-     
+        printf("\n");        
+    }
     close(sock);
     return 0;
 }
