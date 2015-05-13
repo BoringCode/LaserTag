@@ -18,12 +18,15 @@ struct LaserGun{
 };
 
 char MAC_ADDR[18]; 
+char T[50];
+
 
 void configureGun(struct LaserGun *gun){
     printf("Configuring the Gun\n");
     strcpy(gun->mac_address,"AA:AA:AA:AA:AA:AA");
     strcpy(MAC_ADDR,gun->mac_address);
-    strcpy(gun->team,"Red");
+    strcpy(gun->team,"-1");
+    strcpy(T,gun->team);
     printf("%s configured\n",gun->mac_address);
     printf("%s plays for %s\n", gun->mac_address,gun->team);
 }
@@ -43,7 +46,7 @@ void enter_game(int sock,char message[1000], struct LaserGun *gun){
     char time_buffer[26];
     get_time(time_buffer);
     char server_reply[2000];
-    sprintf(message,"{\"id\":\"%s\",\"time\":\"%s\"}\n",MAC_ADDR,time_buffer);
+    sprintf(message,"{\"id\":\"%s\",\"teamID\":\"%s\",\"time\":\"%s\"}",MAC_ADDR,T,time_buffer);
     printf("%s",message);
     if(send(sock,message,strlen(message),0)<0){
         perror("Send failed");
@@ -61,7 +64,7 @@ void enter_game(int sock,char message[1000], struct LaserGun *gun){
 void exit_game(int sock,char message[1000]){
     char time_buffer[26];
     get_time(time_buffer);
-    sprintf(message,"{\"id\":\"%s\",\"exit\":\"true\",\"time\":\"%s\"}\n",MAC_ADDR,time_buffer);
+    sprintf(message,"{\"id\":\"%s\",\"exit\":\"true\",\"time\":\"%s\"}",MAC_ADDR,time_buffer);
     printf("%s",message);
     if(send(sock,message,strlen(message),0)<0){
         perror("Send failed");
@@ -73,7 +76,7 @@ void shoot(int sock,char message[1000]){
     char time_buffer[26];
     get_time(time_buffer);
     // formatted for Server {id: "XX.XX.XXX.XXX",time:"XX:XX:XX"}
-    sprintf(message,"{\"id\":\"%s\",\"shot\":\"true\",\"time\":\"%s\"}\n",MAC_ADDR,time_buffer);
+    sprintf(message,"{\"id\":\"%s\",\"shot\":\"true\",\"time\":\"%s\"}",MAC_ADDR,time_buffer);
     printf("%s",message);
     if(send(sock,message,strlen(message),0)<0){
         perror("Send failed");
@@ -84,7 +87,7 @@ void shoot(int sock,char message[1000]){
 void hit(int sock,char message[1000],char SHOOTER_MAC[50]){
     char time_buffer[26];
     get_time(time_buffer);
-    sprintf(message,"{\"id\":\"%s\",\"hitBy\":\"%s\",\"time\":\"%s\"}\n",MAC_ADDR,SHOOTER_MAC,time_buffer);
+    sprintf(message,"{\"id\":\"%s\",\"hitBy\":\"%s\",\"time\":\"%s\"}",MAC_ADDR,SHOOTER_MAC,time_buffer);
     printf("%s",message);
     if(send(sock,message,strlen(message),0)<0){
         perror("Send failed");
@@ -143,7 +146,11 @@ int main(int argc , char *argv[])
     while(1)
     {
         printf("Enter message (1. Shoot 2. Hit 3. Exit) : ");
-        scanf("%s" , message);
+        ///////////////////////////// CLEAN UP //////////////////////////////////////////////
+        if( (scanf("%s %s" , message, SHOOTER_MAC) != 2) ) {
+            fprintf(stderr, "Error doing scanf for 1-3");
+            break;
+        }
         
         
 // Work on getting string compare with multiple things in a string
