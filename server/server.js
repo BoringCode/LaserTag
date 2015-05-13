@@ -94,11 +94,13 @@ Game.prototype.findPlayer = function(id, teamID, socket) {
 	var self = this, player;
 	//Check if teamID exists and that the player exists in the team
 	if (!teamID || teamID < 0 || !(id in self.teams[teamID])) {
+		console.log(colors.info("LASER TAG CLIENT: ") + colors.help("Creating new player..."));
 		player = self.addPlayer(id);
 		//New player, send initialization information
 		//gameStart gameEnd teamID maxShots shotFrequency
 		socket.write(moment(self.settings.gameStart).unix() + " " + moment(self.settings.gameEnd).unix() + " " + player.settings.teamID + " " + self.settings.maxShots + " " + self.settings.shotFrequency);
 	} else {
+		console.log(colors.info("LASER TAG CLIENT: ") + colors.help("Loading old player..."));
 		player = self.teams[teamID][id];
 	}
 	return player;			
@@ -300,7 +302,7 @@ var main = function() {
 			maxShots: {
 				description: colors.prompt("Max Shots:"),
 				type: 'number',
-				default: 3,
+				default: 5,
 				required: true,
 				message: colors.error("Must be a number")
 			},
@@ -322,7 +324,7 @@ var main = function() {
 			endTime: {
 				description: colors.prompt("Game End Time:"),
 				required: true,
-				default: moment().add(30, "m").format("YYYY-MM-DD H:mm"),
+				default: moment().add(10, "m").format("YYYY-MM-DD H:mm"),
 				before: function(value) {
 					return moment(value, "YYYY-MM-DD H:mm").toArray();
 				}
