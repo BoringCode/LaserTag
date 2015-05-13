@@ -48,15 +48,15 @@ var Game = function(options) {
 	}
 	var start = moment(self.settings.startTime);
 	var end = moment(self.settings.endTime);
-	console.log("Waiting until " + start.format("YYYY-MM-DD h:m a") + " to start game.");
+	console.log("Waiting until " + start.format("YYYY-MM-DD h:mm a") + " to start game.");
 	//Schedule start game
 	self.scheduledGame = schedule.scheduleJob(start.toDate(), function(self) {
 		self.startGame();
-		console.log("Game will end at " + end.format("YYYY-MM-DD h:m a"));
+		console.log("Game will end at " + end.format("YYYY-MM-DD h:mm a"));
 	}.bind(null, self));
 	//Schedule end game
 	schedule.scheduleJob(end.toDate(), function(self) {
-		console.log("Ending game... Waiting for existing connections to close.");
+		console.log(colors.info("Ending game... Waiting for existing connections to close."));
 		self.stopGame();
 	}.bind(null, self));
 }
