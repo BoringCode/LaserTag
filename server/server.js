@@ -35,13 +35,50 @@ console.reset = function () {
  */
 var Game = function(options) {
 	this.settings = options;
-	this.players = {};
+	this.teams = [];
+	var team;
+	//Initialize teams
+	for (var i = 0; i < this.settings.numTeams; i++) {
+		team = {};
+		this.teams.push(team);
+	}
+}
+//Assign to a team based upon the team with the least number of players
+Game.prototype.assignTeam = function() {
+	var self = this;
+	//Default to team 0
+	var teamID = 0, minPlayers = Object.keys(self.teams[0]).length;
+	//Loop through the other teams to check if they have less players
+	for (var i = 1; i < self.settings.numTeams; i++) {
+		var team = self.teams[i];
+		var length = Object.keys(team).length;
+		//Check if this team has less players than the previous team
+		if (length < minPlayers) {
+			teamID = i;
+			minPlayers = length;
+		}
+	}
+	return teamID;
 }
 //Add new players to the game, requires a unique ID
 Game.prototype.addPlayer = function(id) {
 	var self = this;
-	this.players[id] = new Player({maxShots: self.settings.maxShots, delay: self.settings.shotFrequency});
-	return this.players[id];
+	//Loop through teams and assign accordingly
+	var team = self.assignTeam();
+	//Add to team object
+	this.teams[team][id] = new Player({teamID: team, playerID: id, maxShots: self.settings.maxShots, delay: self.settings.shotFrequency});
+	return self.teams[team][id];
+}
+//Find player
+Game.prototype.findPlayer = function(id, teamID) {
+	var self = this, player;
+	//Check if teamID exists and that the player exists in the team
+	if (!teamID || teamID < 0 || !(id in self.teams[teamID])) {
+		player = self.addPlayer(id);
+	} else {
+		player = self.teams[teamID][id];
+	}
+	return player;			
 }
 //Start the game server and process data from each player client
 Game.prototype.startServer = function() {
@@ -57,15 +94,8 @@ Game.prototype.startServer = function() {
 			console.log(colors.info("LASER TAG CLIENT DATA: ") + data);
 
 			var obj = JSON.parse(data);
-			var player;
+			var player = self.findPlayer(obj.id, obj.teamID);
 
-			//Get player
-			if (!(obj.id in self.players)) {
-				player = self.addPlayer(obj.id);
-			} else {
-				player = self.players[obj.id];
-			}
-			
 			console.log(colors.info("LASER TAG CLIENT: ") + colors.data("Player loaded: "), player);
 			
 			//Record shots
@@ -89,7 +119,6 @@ Game.prototype.startServer = function() {
 					sock.write("Invalid hit\n");
 				}
 			}
-
 			sock.write("thanks man");
 			console.log("\n");
 	   });
@@ -140,6 +169,7 @@ Player.prototype.recordShot = function(timestamp) {
 	var previousShot = self.shots[self.shots.length-1];
 	if (self.shots.length === 0 || (moment.isMoment(previousShot) && previousShot.add(self.settings.delay, "s").isBefore(time))) {
 		self.shots.push(time);
+		console.log(self);
 		return true;
 	} else {
 		return false;
