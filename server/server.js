@@ -9,7 +9,9 @@ var net = require("net");
 var prompt = require('prompt');
 var colors = require('colors');
 var ip = require("ip");
-var moment = require('moment');
+var moment = require("moment");
+var schedule = require("node-schedule");
+
 
 //Some setup
 colors.setTheme({
@@ -34,15 +36,31 @@ console.reset = function () {
  * Takes an object containing settings for the game
  */
 var Game = function(options) {
-	this.settings = options;
-	this.teams = [];
-	var team;
+	var self = this;
+	self.settings = options;
+	self.teams = [];
+	self.server = null;	
 	//Initialize teams
+	var team;
 	for (var i = 0; i < this.settings.numTeams; i++) {
 		team = {};
-		this.teams.push(team);
+		self.teams.push(team);
 	}
+	var start = moment(self.settings.startTime);
+	var end = moment(self.settings.endTime);
+	console.log("Waiting until " + start.format("YYYY-MM-DD h:m a") + " to start game.");
+	//Schedule start game
+	self.scheduledGame = schedule.scheduleJob(start.toDate(), function(self) {
+		self.startGame();
+		console.log("Game will end at " + end.format("YYYY-MM-DD h:m a"));
+	}.bind(null, self));
+	//Schedule end game
+	schedule.scheduleJob(end.toDate(), function(self) {
+		console.log("Ending game... Waiting for existing connections to close.");
+		self.stopGame();
+	}.bind(null, self));
 }
+
 //Assign to a team based upon the team with the least number of players
 Game.prototype.assignTeam = function() {
 	var self = this;
@@ -60,6 +78,7 @@ Game.prototype.assignTeam = function() {
 	}
 	return teamID;
 }
+
 //Add new players to the game, requires a unique ID
 Game.prototype.addPlayer = function(id) {
 	var self = this;
@@ -69,6 +88,7 @@ Game.prototype.addPlayer = function(id) {
 	this.teams[team][id] = new Player({teamID: team, playerID: id, maxShots: self.settings.maxShots, delay: self.settings.shotFrequency});
 	return self.teams[team][id];
 }
+
 //Find player
 Game.prototype.findPlayer = function(id, teamID) {
 	var self = this, player;
@@ -80,11 +100,12 @@ Game.prototype.findPlayer = function(id, teamID) {
 	}
 	return player;			
 }
+
 //Start the game server and process data from each player client
-Game.prototype.startServer = function() {
+Game.prototype.startGame = function() {
 	var self = this;
 	// Create a server instance, and chain the listen function to it
-	net.createServer(function(sock) {
+	self.server = net.createServer(function(sock) {
 		var clientInfo = sock.remoteAddress + ":" + sock.remotePort;
 		// We have a connection - a socket object is assigned to the connection automatically
 		console.log(colors.info('LASER TAG CLIENT CONNECTED: ') + colors.debug(clientInfo));
@@ -138,7 +159,15 @@ Game.prototype.startServer = function() {
 
 	//Tell everyone where I'm running
 	console.log(colors.info('Laser Tag server listening on ') + colors.debug(self.settings.host +':'+ self.settings.port));
-};
+}
+
+//Stop game and display stats
+Game.prototype.stopGame = function() {
+	var self = this;
+	self.server.close(function() {
+		console.log("Server shut down!");
+	})
+}
 
 /* 
  * Player constructor
@@ -154,7 +183,7 @@ Player.prototype.recordHit = function(shooter, timestamp) {
 	var self = this;
 	var shot = {
 		shooter: shooter,
-		time: moment(timestamp, "YYYY-MM-DD h:m:s"),
+		time: moment(timestamp, "YYYY-MM-DD H:m:s"),
 	}
 	self.hits.push(shot);
 	return true;
@@ -165,7 +194,7 @@ Player.prototype.recordShot = function(timestamp) {
 	//Make sure player hasn't exceeded number of shots
 	if (self.shots.length >= self.settings.maxShots) return false;
 	//Validate shot frequency
-	var time = moment(timestamp, "YYYY-MM-DD h:m:s");
+	var time = moment(timestamp, "YYYY-MM-DD H:m:s");
 	var previousShot = self.shots[self.shots.length-1];
 	if (self.shots.length === 0 || (moment.isMoment(previousShot) && previousShot.add(self.settings.delay, "s").isBefore(time))) {
 		self.shots.push(time);
@@ -214,17 +243,17 @@ var main = function() {
 			startTime: {
 				description: colors.prompt("Game Start Time:"),
 				required: true,
-				default: moment().format("YYYY-MM-DD h:mm"),
+				default: moment().format("YYYY-MM-DD H:mm"),
 				before: function(value) {
-					return moment(value, "YYYY-MM-DD h:mm");
+					return moment(value, "YYYY-MM-DD H:mm").toArray();
 				}
 			},
 			endTime: {
 				description: colors.prompt("Game End Time:"),
 				required: true,
-				default: moment().add(30, "m").format("YYYY-MM-DD h:mm"),
+				default: moment().add(30, "m").format("YYYY-MM-DD H:mm"),
 				before: function(value) {
-					return moment(value, "YYYY-MM-DD h:mm");
+					return moment(value, "YYYY-MM-DD H:mm").toArray();
 				}
 			},
 			host: {
@@ -252,7 +281,6 @@ var main = function() {
 				console.log(colors.info("    " + result + ": ") + colors.data(results[result]));
 			}
 			game = new Game(results);
-			game.startServer();
 		}
 	});
 }
