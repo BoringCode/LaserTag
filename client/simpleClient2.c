@@ -23,7 +23,10 @@ char T[50];
 
 void configureGun(struct LaserGun *gun){
     printf("Configuring the Gun\n");
-    strcpy(gun->mac_address,"AA:AA:AA:AA:AA:AA");
+
+// INPUT MAC ADDRESS in MAIN
+
+    strcpy(gun->mac_address,MAC_ADDR);
     strcpy(MAC_ADDR,gun->mac_address);
     strcpy(gun->team,"-1");
     strcpy(T,gun->team);
@@ -43,6 +46,7 @@ void get_time(char time_buffer[26]){
 
 void enter_game(int sock,char message[1000], struct LaserGun *gun){
     configureGun(gun);
+    
     char time_buffer[26];
     get_time(time_buffer);
     char server_reply[2000];
@@ -64,7 +68,7 @@ void enter_game(int sock,char message[1000], struct LaserGun *gun){
 void exit_game(int sock,char message[1000]){
     char time_buffer[26];
     get_time(time_buffer);
-    sprintf(message,"{\"id\":\"%s\",\"exit\":\"true\",\"time\":\"%s\"}",MAC_ADDR,time_buffer);
+    sprintf(message,"{\"id\":\"%s\",\"teamID\":\"%s\",\"exit\":\"true\",\"time\":\"%s\"}",MAC_ADDR,T,time_buffer);
     printf("%s",message);
     if(send(sock,message,strlen(message),0)<0){
         perror("Send failed");
@@ -76,7 +80,7 @@ void shoot(int sock,char message[1000]){
     char time_buffer[26];
     get_time(time_buffer);
     // formatted for Server {id: "XX.XX.XXX.XXX",time:"XX:XX:XX"}
-    sprintf(message,"{\"id\":\"%s\",\"shot\":\"true\",\"time\":\"%s\"}",MAC_ADDR,time_buffer);
+    sprintf(message,"{\"id\":\"%s\",\"teamID\":\"%s\",\"shot\":\"true\",\"time\":\"%s\"}",MAC_ADDR,T,time_buffer);
     printf("%s",message);
     if(send(sock,message,strlen(message),0)<0){
         perror("Send failed");
@@ -84,10 +88,10 @@ void shoot(int sock,char message[1000]){
     memset(message,'0',1000);
 }
 
-void hit(int sock,char message[1000],char SHOOTER_MAC[50]){
+void hit(int sock,char message[1000],char SHOOTER_MAC[18],char oT[50]){
     char time_buffer[26];
     get_time(time_buffer);
-    sprintf(message,"{\"id\":\"%s\",\"hitBy\":\"%s\",\"time\":\"%s\"}",MAC_ADDR,SHOOTER_MAC,time_buffer);
+    sprintf(message,"{\"id\":\"%s\",\"teamID\":\"%s\",\"opponentTeamID\":\"%s\",\"hitBy\":\"%s\",\"time\":\"%s\"}",MAC_ADDR,T,oT,SHOOTER_MAC,time_buffer);
     printf("%s",message);
     if(send(sock,message,strlen(message),0)<0){
         perror("Send failed");
@@ -101,7 +105,7 @@ int main(int argc , char *argv[])
     char* host;
     int port;
     struct sockaddr_in server;
-    char message[1000] , server_reply[2000], SHOOT[1],SHOOTER_MAC[100];
+    char message[1000] , server_reply[2000],PlayerID[18], SHOOT[1], SHOOTER_MAC[18], oT[50];
     int connected = 0;
     int numbytes;
     struct LaserGun gun;
@@ -119,7 +123,7 @@ int main(int argc , char *argv[])
     if(argv[2]){
         port = atoi(argv[2]);
     }
-     
+
     //Create socket
     sock = socket(AF_INET , SOCK_STREAM , 0);
     if (sock == -1)
@@ -127,7 +131,7 @@ int main(int argc , char *argv[])
         printf("Could not create socket\n");
     }
     puts("Socket created");
-     
+    
     server.sin_addr.s_addr = inet_addr(host);
     server.sin_family = AF_INET;
     server.sin_port = htons( port );
@@ -141,14 +145,21 @@ int main(int argc , char *argv[])
      
     printf("%s connected to %s:%d\n",MAC_ADDR,host,port);
     connected = CONNECTED;
+    printf("Enter user gun IP ");
+    if (scanf("%s" , MAC_ADDR)!=1){
+        fprintf(stderr, "Error when looking for PlayerID, too many strings inputted");
+        return 1;
+    }
+
     enter_game(sock,message,&gun); 
     //keep communicating with server
     while(1)
     {
         printf("Enter message (1. Shoot 2. Hit 3. Exit) : ");
         ///////////////////////////// CLEAN UP //////////////////////////////////////////////
-        if( (scanf("%s %s" , message, SHOOTER_MAC) != 2) ) {
-            fprintf(stderr, "Error doing scanf for 1-3");
+    
+        if( (scanf("%s" , message) != 1) ) {
+            fprintf(stderr, "Error doing scanf for 1");
             break;
         }
         
@@ -165,7 +176,16 @@ int main(int argc , char *argv[])
         else{
             int n = sscanf(message,"%s,%s",SHOOT,SHOOTER_MAC);
             if(!strcmp("2",SHOOT)){
-                hit(sock,message,SHOOTER_MAC);
+                printf("Input shooter separated by space and shooter team ID (ex \"XX.XX.XX.XX 2\") ");
+                int i;
+                i = scanf("%s %s", SHOOTER_MAC, oT);
+                printf("%s",oT);
+                if ( i!=2){
+                    printf("entered in: %d",i); 
+                    fprintf(stderr, "Error when checking for shooter and shooter team ID");
+                    break;
+                }
+                hit(sock,message,SHOOTER_MAC,oT);
             }
             else{
                 printf("%s said: %s\n",MAC_ADDR,message);
