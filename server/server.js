@@ -90,11 +90,14 @@ Game.prototype.addPlayer = function(id) {
 }
 
 //Find player
-Game.prototype.findPlayer = function(id, teamID) {
+Game.prototype.findPlayer = function(id, teamID, socket) {
 	var self = this, player;
 	//Check if teamID exists and that the player exists in the team
 	if (!teamID || teamID < 0 || !(id in self.teams[teamID])) {
 		player = self.addPlayer(id);
+		//New player, send initialization information
+		//gameStart gameEnd teamID maxShots shotFrequency
+		socket.write(moment(self.settings.gameStart).unix() + " " + moment(self.settings.gameEnd).unix() + " " + player.settings.teamID + " " + self.settings.maxShots + " " + self.settings.shotFrequency);
 	} else {
 		player = self.teams[teamID][id];
 	}
@@ -108,46 +111,47 @@ Game.prototype.startGame = function() {
 	self.server = net.createServer(function(sock) {
 		var clientInfo = sock.remoteAddress + ":" + sock.remotePort;
 		// We have a connection - a socket object is assigned to the connection automatically
-		console.log(colors.info('LASER TAG CLIENT CONNECTED: ') + colors.debug(clientInfo));
+		console.log(colors.info('\nLASER TAG CLIENT CONNECTED: ') + colors.help(clientInfo));
 
 		// Add a 'data' event handler to this instance of socket
 		sock.on('data', function(data) {
 			console.log(colors.info("LASER TAG CLIENT DATA: ") + data);
 
 			var obj = JSON.parse(data);
-			var player = self.findPlayer(obj.id, obj.teamID);
+			var player = self.findPlayer(obj.id, obj.teamID, sock);
 
-			console.log(colors.info("LASER TAG CLIENT: ") + colors.data("Player loaded: "), player);
+			console.log(colors.info("LASER TAG CLIENT: ") + colors.help("Player loaded:") + " %j", player);
 			
 			//Record shots
 			if (obj.shot) {
 				if (player.recordShot(obj.time)) {
-					console.log(colors.info("LASER TAG CLIENT: ") + colors.data("Shot recorded"));
-					sock.write("shot recorded, thanks\n");
+					console.log(colors.info("LASER TAG CLIENT: ") + colors.help("Shot recorded"));
+					sock.write("1");
 				} else {
 					console.log(colors.info("LASER TAG CLIENT: ") + colors.warn("Invalid shot reported"));
-					sock.write("Invalid shot\n");
+					sock.write("-1");
 				}
 			}
 			
 			//record hit
 			if (obj.hitBy) {
-				if (player.recordHit(obj.hitBy, obj.time)) {
-					console.log(colors.info("LASER TAG CLIENT: ") + colors.data("Hit recorded"));
-					sock.write("hit record, thanks\n");
+				if (obj.hitBy in self.teams[obj.opponentTeamID] && player.recordHit(obj.hitBy, obj.opponentTeamID, obj.time)) {
+					//Update opponent with kill
+					self.teams[obj.opponentTeamID][obj.hitBy].recordKill(obj.id, obj.teamID);
+					console.log(colors.info("LASER TAG CLIENT: ") + colors.help("Hit recorded"));
+					sock.write("1");
 				} else {
 					console.log(colors.info("LASER TAG CLIENT: ") + colors.warn("Invalid hit reported"));
-					sock.write("Invalid hit\n");
+					sock.write("-1");
 				}
 			}
-			sock.write("thanks man");
-			console.log("\n");
 	   });
 
 		// Add a 'close' event handler to this instance of socket
 		sock.on('close', function(data) {
 			//Display a message on close
-			console.log(colors.info('LASER TAG CLIENT CLOSED: ') + colors.debug(clientInfo) + "\n");
+			console.log(colors.info('LASER TAG CLIENT CLOSED: ') + colors.help(clientInfo) + "\n");
+			self.displayStats();
 		});
 
 		//Handle errors
@@ -158,7 +162,47 @@ Game.prototype.startGame = function() {
 	}).listen(self.settings.port, self.settings.host);
 
 	//Tell everyone where I'm running
-	console.log(colors.info('Laser Tag server listening on ') + colors.debug(self.settings.host +':'+ self.settings.port));
+	console.log(colors.info('Laser Tag server listening on ') + colors.help(self.settings.host +':'+ self.settings.port));
+}
+
+//Display stats
+Game.prototype.displayStats = function() {
+	var self = this;
+	console.log(colors.info("GAME STATS"));
+	var winningTeam = -1, mostTeamKills = -1, mostKillsID = -1, mostKills = -1;
+	for (var i = 0; i < self.teams.length; i++) {
+		var team = self.teams[i];
+		var numPlayers = Object.keys(team).length;
+		var totalKills = 0, totalDeaths = 0, averageAccuracy = 0, totalKd = 0;
+		console.log(colors.info("    Team: %s") + " (%d players)", i, numPlayers);
+		//Loop through players
+		for (var ID in team) {
+			var player = team[ID];
+			var kills = player.getNumKills(), shots = player.getNumShots(), deaths = player.getNumDeaths(), accuracy, kd;
+			if (shots != 0) { accuracy = (kills / shots) * 100;	} else { accuracy = 0; } 
+			if (deaths != 0) { kd = Math.floor(kills / deaths);	} else { kd = Math.floor(kills / 1); }
+			totalKills += kills;
+			totalDeaths += deaths;
+			averageAccuracy += accuracy;
+			//Cacluate if player has the most kills of any player
+			if (kills > mostKills) {
+				mostKillsID = ID;
+				mostKills = kills;
+			}
+			console.log(colors.help("        Player: %s"), ID);
+			console.log("            Kills: %d, Shots %d, Accuracy: %d\%, Deaths: %d, K/D: %d", kills, shots, accuracy, deaths, kd);
+		}
+		if (totalDeaths != 0) { totalKd = Math.floor(totalKills / totalDeaths); } else { totalKd = Math.floor(kills / 1); }
+		averageAccuracy = (averageAccuracy / numPlayers) * 100;
+		console.log(colors.help("\n        Team totals: ") + "Total Kills: %d, Total Deaths: %d, K/D: %d, Average Accuracy: %d\%\n", totalKills, totalDeaths, averageAccuracy, totalKd);
+		if (totalKills > mostTeamKills) {
+			winningTeam = i;
+			mostTeamKills = totalKills;
+		}
+	}
+	console.log(colors.info("Winners"));
+	console.log("    Player '%s' had %d kills!", mostKillsID, mostKills);
+	console.log("    Team '%d' had %d kills, congratulations!", winningTeam, mostTeamKills);
 }
 
 //Stop game and display stats
@@ -167,6 +211,7 @@ Game.prototype.stopGame = function() {
 	self.server.close(function() {
 		console.log("Server shut down!");
 	})
+	self.displayStats();
 }
 
 /* 
@@ -177,17 +222,33 @@ var Player = function(options) {
 	this.settings = options;
 	this.shots =[];
 	this.hits = [];
+	this.kills = [];
 }
+
+Player.prototype.getNumKills = function() {
+	return this.kills.length;
+}
+
+Player.prototype.getNumShots = function() {
+	return this.shots.length;
+}
+
+Player.prototype.getNumDeaths = function() {
+	return this.hits.length;
+}
+
 //Record hits on the player
-Player.prototype.recordHit = function(shooter, timestamp) {
+Player.prototype.recordHit = function(shooter, team, timestamp) {
 	var self = this;
 	var shot = {
 		shooter: shooter,
+		team: team,
 		time: moment(timestamp, "YYYY-MM-DD H:m:s"),
 	}
 	self.hits.push(shot);
 	return true;
 }
+
 //Record shots made by the player, rate limited according to the game settings that the player is apart of
 Player.prototype.recordShot = function(timestamp) {
 	var self = this;
@@ -203,6 +264,16 @@ Player.prototype.recordShot = function(timestamp) {
 	} else {
 		return false;
 	}
+}
+
+//Record kills made by player
+Player.prototype.recordKill = function(id, teamID) {
+	var self = this;
+	var kill = {
+		opponent: id,
+		teamID: teamID
+	};
+	self.kills.push(kill);
 }
 
 //Gets settings from the user and starts a new game instance
