@@ -17,8 +17,8 @@ struct LaserGun{
     char team[50];
 };
 
-char MAC_ADDR[18]; 
-char T[50];
+
+char MAC_ADDR[18], T[50], gamestart_s[200], gameend_s[200], teamid_s[50], maxshots_s[10], shotdelay_s[10];
 
 
 void configureGun(struct LaserGun *gun){
@@ -34,10 +34,15 @@ void configureGun(struct LaserGun *gun){
     printf("%s plays for %s\n", gun->mac_address,gun->team);
 }
 
+void configureGun2(struct LaserGun *gun){
+    strcpy(gun->team,T);
+    strcpy(teamid_s,gun->team);
+}
+
 void get_time(char time_buffer[26]){
     time_t timer;
     struct tm* tm_info;
-
+    fprintf(stdout,"%u\n",(unsigned)time(NULL));
     time(&timer);
     tm_info = localtime(&timer);
     
@@ -55,12 +60,12 @@ void enter_game(int sock,char message[1000], struct LaserGun *gun){
     if(send(sock,message,strlen(message),0)<0){
         perror("Send failed");
     }
-    if( recv(sock , server_reply , 2000 , 0) < 0)
+    /*if( recv(sock , server_reply , 2000 , 0) < 0)
     { 
         puts("recv failed");
     }
     printf("Server says: %s\n",server_reply);
-
+    */
     //sprintf(message,"{\"id\":\"%s\",\"time\":\"%s\"}\n",MAC_ADDR,time_buffer);
     memset(message,'0',1000);
 }
@@ -68,12 +73,7 @@ void enter_game(int sock,char message[1000], struct LaserGun *gun){
 void exit_game(int sock,char message[1000]){
     char time_buffer[26];
     get_time(time_buffer);
-    sprintf(message,"{\"id\":\"%s\",\"teamID\":\"%s\",\"exit\":\"true\",\"time\":\"%s\"}",MAC_ADDR,T,time_buffer);
     printf("%s",message);
-    if(send(sock,message,strlen(message),0)<0){
-        perror("Send failed");
-    }
-    memset(message,'0',1000);
 }
 
 void shoot(int sock,char message[1000]){
@@ -106,6 +106,7 @@ int main(int argc , char *argv[])
     int port;
     struct sockaddr_in server;
     char message[1000] , server_reply[2000],PlayerID[18], SHOOT[1], SHOOTER_MAC[18], oT[50];
+    // character arrays split from server
     int connected = 0;
     int numbytes;
     struct LaserGun gun;
@@ -145,18 +146,59 @@ int main(int argc , char *argv[])
      
     printf("%s connected to %s:%d\n",MAC_ADDR,host,port);
     connected = CONNECTED;
-    printf("Enter user gun IP ");
+    printf("Enter user gun MAC ");
     if (scanf("%s" , MAC_ADDR)!=1){
         fprintf(stderr, "Error when looking for PlayerID, too many strings inputted");
         return 1;
     }
-
-    enter_game(sock,message,&gun); 
+    enter_game(sock,message,&gun);
+    
+    if((numbytes =  recv(sock , server_reply , 2000 , 0)) < 0)
+    { 
+        puts("recv failed");
+        return 1;
+    }
+    printf("%s:%d reply : ",host,port);
+    write(0,server_reply,numbytes);
+    char server_reply2[] = "1231563688 1431234322 0 5 3"; 
+    char * pch;
+    int f = 0;
+    /*
+    pch = strtok(server_reply2," ");
+    strcpy(gamestart_s, pch);
+    printf("%s",server_reply2);
+    pch = strtok(server_reply2," ");
+    strcpy(gameend_s, pch);*/
+    //char string[100];
+    pch = strtok(server_reply2, " ");
+    while (pch != NULL){
+        //strcpy(string, pch);
+        //printf("pch %s\n", string);
+        //pch = strtok (server_reply2," ");
+        
+        if (f==0){
+            strcpy(gamestart_s, pch);
+        }if (f==1){
+            strcpy(gameend_s, pch);
+        }if (f==2){
+            strcpy(teamid_s, pch);
+        }if (f==3){
+            strcpy(maxshots_s, pch);
+        }if (f==4){
+            strcpy(shotdelay_s, pch);
+        }
+        pch = strtok(NULL, " ");
+        //printf("pch %s",pch);
+        f++;
+    }
+    printf("Recieved: %s %s %s %s %s",gamestart_s,gameend_s,teamid_s,maxshots_s,shotdelay_s);
+    configureGun2(&gun);
     //keep communicating with server
     while(1)
     {
+
+
         printf("Enter message (1. Shoot 2. Hit 3. Exit) : ");
-        ///////////////////////////// CLEAN UP //////////////////////////////////////////////
     
         if( (scanf("%s" , message) != 1) ) {
             fprintf(stderr, "Error doing scanf for 1");
