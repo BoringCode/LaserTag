@@ -48,15 +48,15 @@ var Game = function(options) {
 	}
 	var start = moment(self.settings.startTime);
 	var end = moment(self.settings.endTime);
-	console.log("Waiting until " + start.format("YYYY-MM-DD h:mm a") + " to start game.");
+	console.log("\nWaiting until " + start.format("YYYY-MM-DD h:mm a") + " to start game.");
 	//Schedule start game
 	self.scheduledGame = schedule.scheduleJob(start.toDate(), function(self) {
 		self.startGame();
-		console.log("Game will end at " + end.format("YYYY-MM-DD h:mm a"));
+		console.log("\nGame will end at " + end.format("YYYY-MM-DD h:mm a"));
 	}.bind(null, self));
 	//Schedule end game
 	schedule.scheduleJob(end.toDate(), function(self) {
-		console.log(colors.info("Ending game... Waiting for existing connections to close."));
+		console.log(colors.info("\nEnding game... Waiting for existing connections to close."));
 		self.stopGame();
 	}.bind(null, self));
 }
@@ -153,7 +153,6 @@ Game.prototype.startGame = function() {
 		sock.on('close', function(data) {
 			//Display a message on close
 			console.log(colors.info('LASER TAG CLIENT CLOSED: ') + colors.help(clientInfo) + "\n");
-			self.displayStats();
 		});
 
 		//Handle errors
@@ -164,13 +163,13 @@ Game.prototype.startGame = function() {
 	}).listen(self.settings.port, self.settings.host);
 
 	//Tell everyone where I'm running
-	console.log(colors.info('Laser Tag server listening on ') + colors.help(self.settings.host +':'+ self.settings.port));
+	console.log(colors.info('\nLaser Tag server listening on ') + colors.help(self.settings.host +':'+ self.settings.port));
 }
 
 //Display stats
 Game.prototype.displayStats = function() {
 	var self = this;
-	console.log(colors.info("GAME STATS"));
+	console.log(colors.info("\nGAME STATS"));
 	var winningTeam = -1, mostTeamKills = -1, mostKillsID = -1, mostKills = -1;
 	for (var i = 0; i < self.teams.length; i++) {
 		var team = self.teams[i];
@@ -211,7 +210,7 @@ Game.prototype.displayStats = function() {
 Game.prototype.stopGame = function() {
 	var self = this;
 	self.server.close(function() {
-		console.log("Server shut down!");
+		console.log("\nServer shut down!");
 	})
 	self.displayStats();
 }
