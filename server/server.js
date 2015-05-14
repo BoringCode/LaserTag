@@ -48,15 +48,15 @@ var Game = function(options) {
 	}
 	var start = moment(self.settings.startTime);
 	var end = moment(self.settings.endTime);
-	console.log("\nWaiting until " + start.format("YYYY-MM-DD h:mm a") + " to start game.");
+	console.log("\nWaiting until " + start.format("YYYY-MM-DD h:mma") + " to start game");
 	//Schedule start game
 	self.scheduledGame = schedule.scheduleJob(start.toDate(), function(self) {
 		self.startGame();
-		console.log("\nGame will end at " + end.format("YYYY-MM-DD h:mm a"));
+		console.log("\nGame will end at " + end.format("YYYY-MM-DD h:mma"));
 	}.bind(null, self));
 	//Schedule end game
 	schedule.scheduleJob(end.toDate(), function(self) {
-		console.log(colors.info("\nEnding game... Waiting for existing connections to close."));
+		console.log(colors.info("\nEnding game... Waiting for existing connections to close"));
 		self.stopGame();
 	}.bind(null, self));
 }
@@ -93,7 +93,7 @@ Game.prototype.addPlayer = function(id) {
 Game.prototype.findPlayer = function(id, teamID, socket) {
 	var self = this, player;
 	//Check if teamID exists and that the player exists in the team
-	if (!teamID || teamID < 0 || !(id in self.teams[teamID])) {
+	if (!teamID || teamID < 0 || teamID >= self.teams.length || !(id in self.teams[teamID])) {
 		console.log(colors.info("LASER TAG CLIENT: ") + colors.help("Creating new player..."));
 		player = self.addPlayer(id);
 		//New player, send initialization information
@@ -113,7 +113,7 @@ Game.prototype.startGame = function() {
 	self.server = net.createServer(function(sock) {
 		var clientInfo = sock.remoteAddress + ":" + sock.remotePort;
 		// We have a connection - a socket object is assigned to the connection automatically
-		console.log(colors.info('\nLASER TAG CLIENT CONNECTED: ') + colors.help(clientInfo));
+		console.log(colors.info('\nLASER TAG CLIENT CONNECTED: ') + colors.help(clientInfo) + "\n");
 
 		// Add a 'data' event handler to this instance of socket
 		sock.on('data', function(data) {
@@ -128,31 +128,32 @@ Game.prototype.startGame = function() {
 			if (obj.shot) {
 				if (player.recordShot(obj.time)) {
 					console.log(colors.info("LASER TAG CLIENT: ") + colors.help("Shot recorded"));
-					sock.write("1");
+					sock.write("yes");
 				} else {
 					console.log(colors.info("LASER TAG CLIENT: ") + colors.warn("Invalid shot reported"));
-					sock.write("-1");
+					sock.write("no");
 				}
 			}
 			
 			//record hit
 			if (obj.hitBy) {
-				if (obj.hitBy in self.teams[obj.opponentTeamID] && player.recordHit(obj.hitBy, obj.opponentTeamID, obj.time)) {
+				if (obj.opponentTeamID >= 0 && obj.opponentTeamID < self.teams.length && obj.hitBy in self.teams[obj.opponentTeamID] && player.recordHit(obj.hitBy, obj.opponentTeamID, obj.time)) {
 					//Update opponent with kill
 					self.teams[obj.opponentTeamID][obj.hitBy].recordKill(obj.id, obj.teamID);
 					console.log(colors.info("LASER TAG CLIENT: ") + colors.help("Hit recorded"));
-					sock.write("1");
+					sock.write("yes");
 				} else {
 					console.log(colors.info("LASER TAG CLIENT: ") + colors.warn("Invalid hit reported"));
-					sock.write("-1");
+					sock.write("no");
 				}
 			}
+			//sock.write("the end of the road man");
 	   });
 
 		// Add a 'close' event handler to this instance of socket
 		sock.on('close', function(data) {
 			//Display a message on close
-			console.log(colors.info('LASER TAG CLIENT CLOSED: ') + colors.help(clientInfo) + "\n");
+			console.log(colors.info('\nLASER TAG CLIENT CLOSED: ') + colors.help(clientInfo) + "\n");
 		});
 
 		//Handle errors
