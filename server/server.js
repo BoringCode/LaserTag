@@ -38,6 +38,8 @@ console.reset = function () {
 var Game = function(options) {
 	var self = this;
 	self.settings = options;
+	self.startTime = moment(self.settings.startTime);
+	self.endTime = moment(self.settings.endTime);
 	self.teams = [];
 	self.server = null;	
 	//Initialize teams
@@ -46,16 +48,11 @@ var Game = function(options) {
 		team = {};
 		self.teams.push(team);
 	}
-	var start = moment(self.settings.startTime);
-	var end = moment(self.settings.endTime);
-	console.log("\nWaiting until " + start.format("YYYY-MM-DD h:mma") + " to start game");
-	//Schedule start game
-	self.scheduledGame = schedule.scheduleJob(start.toDate(), function(self) {
-		self.startGame();
-		console.log("\nGame will end at " + end.format("YYYY-MM-DD h:mma"));
-	}.bind(null, self));
+	console.log("\nWaiting until " + self.startTime.format("YYYY-MM-DD h:mma") + " to start game");
+	self.startGame();
+	console.log("\nGame will end at " + self.endTime.format("YYYY-MM-DD h:mma"));
 	//Schedule end game
-	schedule.scheduleJob(end.toDate(), function(self) {
+	schedule.scheduleJob(self.endTime.toDate(), function(self) {
 		console.log(colors.info("\nEnding game... Waiting for existing connections to close"));
 		self.stopGame();
 	}.bind(null, self));
@@ -98,7 +95,7 @@ Game.prototype.findPlayer = function(id, teamID, socket) {
 		player = self.addPlayer(id);
 		//New player, send initialization information
 		//gameStart gameEnd teamID maxShots shotFrequency
-		socket.write(moment(self.settings.gameStart).unix() + " " + moment(self.settings.gameEnd).unix() + " " + player.settings.teamID + " " + self.settings.maxShots + " " + self.settings.shotFrequency);
+		socket.write(self.startTime.unix() + " " + self.endTime.unix() + " " + player.settings.teamID + " " + self.settings.maxShots + " " + self.settings.shotFrequency);
 	} else {
 		console.log(colors.info("LASER TAG CLIENT: ") + colors.help("Loading old player..."));
 		player = self.teams[teamID][id];
@@ -117,12 +114,19 @@ Game.prototype.startGame = function() {
 
 		// Add a 'data' event handler to this instance of socket
 		sock.on('data', function(data) {
-			console.log(colors.info("LASER TAG CLIENT DATA: ") + data);
+			console.log(colors.info("\nLASER TAG CLIENT DATA: ") + data);
 
 			var obj = JSON.parse(data);
+			if (!obj.id && !obj.teamID) {
+				console.log(colors.error("ERROR: ") + "Invalid player");
+				return;
+			}
 			var player = self.findPlayer(obj.id, obj.teamID, sock);
 
 			console.log(colors.info("LASER TAG CLIENT: ") + colors.help("Player loaded:") + " %j", player);
+			
+			//Don't allow players to do anything until the game has started
+			if (moment().isBefore(self.startTime)) return;
 			
 			//Record shots
 			if (obj.shot) {
@@ -245,7 +249,7 @@ Player.prototype.recordHit = function(shooter, team, timestamp) {
 	var shot = {
 		shooter: shooter,
 		team: team,
-		time: moment(timestamp, "YYYY-MM-DD H:m:s"),
+		time: moment.unix(timestamp)
 	}
 	self.hits.push(shot);
 	return true;
@@ -257,11 +261,10 @@ Player.prototype.recordShot = function(timestamp) {
 	//Make sure player hasn't exceeded number of shots
 	if (self.shots.length >= self.settings.maxShots) return false;
 	//Validate shot frequency
-	var time = moment(timestamp, "YYYY-MM-DD H:m:s");
+	var time = moment.unix(timestamp);
 	var previousShot = self.shots[self.shots.length-1];
-	if (self.shots.length === 0 || (moment.isMoment(previousShot) && previousShot.add(self.settings.delay, "s").isBefore(time))) {
+	if (self.shots.length === 0 || (previousShot.add(self.settings.delay, "s").isBefore(time))) {
 		self.shots.push(time);
-		console.log(self);
 		return true;
 	} else {
 		return false;
@@ -316,18 +319,13 @@ var main = function() {
 			startTime: {
 				description: colors.prompt("Game Start Time:"),
 				required: true,
-				default: moment().format("YYYY-MM-DD H:mm"),
-				before: function(value) {
-					return moment(value, "YYYY-MM-DD H:mm").toArray();
-				}
+				default: moment().format("YYYY-MM-DD HH:mm"),
+				
 			},
 			endTime: {
 				description: colors.prompt("Game End Time:"),
 				required: true,
-				default: moment().add(10, "m").format("YYYY-MM-DD H:mm"),
-				before: function(value) {
-					return moment(value, "YYYY-MM-DD H:mm").toArray();
-				}
+				default: moment().add(10, "m").format("YYYY-MM-DD HH:mm"),
 			},
 			host: {
 				description: colors.prompt("Host:"),
