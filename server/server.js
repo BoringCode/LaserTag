@@ -49,11 +49,8 @@ var Game = function(options) {
 		self.teams.push(team);
 	}
 	console.log("\nWaiting until " + self.startTime.format("YYYY-MM-DD h:mma") + " to start game");
-	//Schedule start game
-	self.scheduledGame = schedule.scheduleJob(self.startTime.toDate(), function(self) {
-		self.startGame();
-		console.log("\nGame will end at " + self.endTime.format("YYYY-MM-DD h:mma"));
-	}.bind(null, self));
+	self.startGame();
+	console.log("\nGame will end at " + self.endTime.format("YYYY-MM-DD h:mma"));
 	//Schedule end game
 	schedule.scheduleJob(self.endTime.toDate(), function(self) {
 		console.log(colors.info("\nEnding game... Waiting for existing connections to close"));
@@ -117,16 +114,19 @@ Game.prototype.startGame = function() {
 
 		// Add a 'data' event handler to this instance of socket
 		sock.on('data', function(data) {
-			console.log(colors.info("LASER TAG CLIENT DATA: ") + data);
+			console.log(colors.info("\nLASER TAG CLIENT DATA: ") + data);
 
 			var obj = JSON.parse(data);
-			if (!obj.id && obj.teamID) {
+			if (!obj.id && !obj.teamID) {
 				console.log(colors.error("ERROR: ") + "Invalid player");
 				return;
 			}
 			var player = self.findPlayer(obj.id, obj.teamID, sock);
 
 			console.log(colors.info("LASER TAG CLIENT: ") + colors.help("Player loaded:") + " %j", player);
+			
+			//Don't allow players to do anything until the game has started
+			if (moment().isBefore(self.startTime)) return;
 			
 			//Record shots
 			if (obj.shot) {
@@ -319,13 +319,13 @@ var main = function() {
 			startTime: {
 				description: colors.prompt("Game Start Time:"),
 				required: true,
-				default: moment().format("YYYY-MM-DD H:mm"),
+				default: moment().format("YYYY-MM-DD HH:mm"),
 				
 			},
 			endTime: {
 				description: colors.prompt("Game End Time:"),
 				required: true,
-				default: moment().add(10, "m").format("YYYY-MM-DD H:mm"),
+				default: moment().add(10, "m").format("YYYY-MM-DD HH:mm"),
 			},
 			host: {
 				description: colors.prompt("Host:"),
