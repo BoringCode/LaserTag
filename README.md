@@ -79,8 +79,6 @@ $ grunt
 
 ###Production
 
-A production server is running on `http://dev.bradleyrosenfeld.com` or `45.55.149.40`
-
 In production, `pm2` should be used to handle node processes.
 
 Run
