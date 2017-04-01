@@ -1,13 +1,14 @@
-#LaserTag
+# LaserTag
+
 A laser tag server written in Node.js and a laser tag client written in C
 
 This branch is a stripped down version of the main branch, specifically built for our Data Communications class.
 
-##Server
+## Server
 Install dependencies: `npm install`
 
 
-###Running
+### Running
 
 
 ```
@@ -16,12 +17,12 @@ $ node server.js
 ```
 
 
-###Development
+### Development
 
 The socket server for communication with guns is located in `./server/`
 
 
-###Production
+### Production
 
 In production, `pm2` should be used to handle node processes.
 
@@ -31,7 +32,7 @@ $ cd ./server
 $ NODE_ENV=prod pm2 start server.js
 ```
 
-##Client
+## Client
 
 Compile `gcc -Wall -o simpleClient.o simpleClient.c`
 
