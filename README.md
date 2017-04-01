@@ -1,13 +1,15 @@
-#LaserTag
+# LaserTag
+
 A laser tag server written in Node.js and a laser tag client written in C
 
 
-##Server
+## Server
+
 Install dependencies: `npm install`
 
 If this is your first time, install Grunt: `npm install -g grunt-cli`
 
-###Running
+### Running
 
 On Windows:
 
@@ -22,7 +24,7 @@ $ cd ./server
 $ NODE_ENV=dev node main
 ```
 
-###Development
+### Development
 
 The front end web server is located in `./server/web/`. Built using Express for routing.
 
@@ -30,7 +32,7 @@ The socket server for communication with guns is located in `./server/socket/`
 
 Configuration can be found in `./server/config.json`. This is done on an environment basis (for example `dev`).
 
-####Directory Structure
+#### Directory Structure
 
 ```
 LaserTag/server/
@@ -54,7 +56,7 @@ LaserTag/server/
 
 All Javascript development should be done inside the source folder. Split your Angular.js files into the correct folders.
 
-####Grunt
+#### Grunt
 
 Grunt is a task runner that we are using for compiling our Javascript for production. The default task will output unminified JS files and will watch the src folder for changes.
 
@@ -67,7 +69,7 @@ $ grunt
 
 This will launch the dev task (which outputs unminfied JS files to the public JS folder) and launches a watch task to allow for quick updating while in development.
 
-####Using Watch
+#### Using Watch
 
 In development it can be helpful to automatically reload the app. Using PM2, you can watch the server directory for changes.
 
@@ -77,7 +79,7 @@ $ pm2 start main.js --watch
 $ grunt
 ```
 
-###Production
+### Production
 
 In production, `pm2` should be used to handle node processes.
 
@@ -88,7 +90,7 @@ $ grunt build
 $ NODE_ENV=prod pm2 start main.js
 ```
 
-##Client
+## Client
 
 Compile `gcc -Wall -o simpleClient.o simpleClient.c`
 
@@ -96,7 +98,7 @@ or use the Makefile provided for simpleClient2.c program
 
 Run `./simpleClient.o 45.55.149.40 8888`
 
-##Todo
+## Todo
 
 - Implement lasertag-db
 - Create API (and document) for socket server and web app to communicate with the database
